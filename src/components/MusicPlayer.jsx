@@ -34,7 +34,7 @@ const SkipBackIcon = () => (
 
 const SkipForwardIcon = () => (
     <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
-        <path d="M6 18l8.5-6L6 6v12zm2.5-6 6-4.25v8.5L8.5 12zM16 6h2v12h-2z" />
+        <path d="M6 18l8.5-6L6 6v12zm8.5 0V6h2v12h-2z" />
     </svg>
 );
 
