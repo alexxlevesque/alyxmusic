@@ -26,6 +26,18 @@ const ShuffleIcon = () => (
     </svg>
 );
 
+const SkipBackIcon = () => (
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
+        <path d="M6 6h2v12H6zm3.5 6 8.5 6V6z" />
+    </svg>
+);
+
+const SkipForwardIcon = () => (
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
+        <path d="M6 18l8.5-6L6 6v12zm2.5-6 6-4.25v8.5L8.5 12zM16 6h2v12h-2z" />
+    </svg>
+);
+
 const VolumeHighIcon = () => (
     <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
         <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z" />
@@ -188,6 +200,20 @@ export default function MusicPlayer() {
         }
     };
 
+    const skipToStart = () => {
+        if (!howlRef.current) return;
+        howlRef.current.seek(0);
+        setCurrentTime(0);
+        setProgress(0);
+        if (!isPlaying) {
+            howlRef.current.play();
+        }
+    };
+
+    const skipToNext = () => {
+        playRandomSong();
+    };
+
     const handleProgressClick = (e) => {
         if (!howlRef.current || !duration) return;
         const rect = e.currentTarget.getBoundingClientRect();
@@ -326,6 +352,17 @@ export default function MusicPlayer() {
                 {/* Controls */}
                 <div className="controls">
                     <button
+                        className="control-btn"
+                        onClick={skipToStart}
+                        disabled={!currentSong || isLoading}
+                        id="skip-back-btn"
+                        aria-label="Restart song"
+                        title="Restart song"
+                    >
+                        <SkipBackIcon />
+                    </button>
+
+                    <button
                         className="play-btn"
                         onClick={currentSong ? togglePlayPause : playRandomSong}
                         disabled={isLoading || (initialLoad && songs.length === 0)}
@@ -339,6 +376,17 @@ export default function MusicPlayer() {
                         ) : (
                             <PlayIcon />
                         )}
+                    </button>
+
+                    <button
+                        className="control-btn"
+                        onClick={skipToNext}
+                        disabled={isLoading || songs.length === 0}
+                        id="skip-forward-btn"
+                        aria-label="Next song"
+                        title="Next song"
+                    >
+                        <SkipForwardIcon />
                     </button>
                 </div>
 
