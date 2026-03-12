@@ -56,6 +56,20 @@ const VolumeLowIcon = () => (
     </svg>
 );
 
+const SearchIcon = () => (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <circle cx="11" cy="11" r="8" />
+        <line x1="21" y1="21" x2="16.65" y2="16.65" />
+    </svg>
+);
+
+const CloseIcon = () => (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+        <line x1="18" y1="6" x2="6" y2="18" />
+        <line x1="6" y1="6" x2="18" y2="18" />
+    </svg>
+);
+
 /* ——— Helper: format seconds ——— */
 function formatTime(secs) {
     if (!secs || isNaN(secs)) return '0:00';
@@ -84,6 +98,9 @@ export default function MusicPlayer() {
     const [volume, setVolume] = useState(0.7);
     const [isMuted, setIsMuted] = useState(false);
     const [initialLoad, setInitialLoad] = useState(true);
+    const [showSearch, setShowSearch] = useState(false);
+    const [searchQuery, setSearchQuery] = useState('');
+    const searchInputRef = useRef(null);
 
     const howlRef = useRef(null);
     const rafRef = useRef(null);
@@ -125,30 +142,15 @@ export default function MusicPlayer() {
         };
     }, []);
 
-    const playRandomSong = async () => {
-        if (songs.length === 0) return;
-
+    const loadAndPlay = useCallback(async (song, onEndCallback) => {
         setIsLoading(true);
         setError(null);
 
-        // Stop current
         if (howlRef.current) {
             howlRef.current.unload();
             howlRef.current = null;
         }
         if (rafRef.current) cancelAnimationFrame(rafRef.current);
-
-        // Pick random song (avoid repeating if possible)
-        let randomIndex;
-        if (songs.length === 1) {
-            randomIndex = 0;
-        } else {
-            do {
-                randomIndex = Math.floor(Math.random() * songs.length);
-            } while (currentSong && songs[randomIndex].fullPath === currentSong.fullPath);
-        }
-
-        const song = songs[randomIndex];
 
         try {
             const url = await getMusicURL(song.fullPath);
@@ -166,8 +168,7 @@ export default function MusicPlayer() {
                     setIsPlaying(false);
                     setProgress(0);
                     setCurrentTime(0);
-                    // Auto-play next random
-                    playRandomSong();
+                    if (onEndCallback) onEndCallback();
                 },
                 onloaderror: (_, err) => {
                     setIsLoading(false);
@@ -187,7 +188,29 @@ export default function MusicPlayer() {
             setError('Failed to get the download URL. Check Firebase Storage rules.');
             console.error(err);
         }
-    };
+    }, [isMuted, volume, updateProgress]);
+
+    const playRandomSong = useCallback(async (songsOverride, currentOverride) => {
+        const list = songsOverride ?? songs;
+        const cur = currentOverride ?? currentSong;
+        if (list.length === 0) return;
+        let randomIndex;
+        if (list.length === 1) {
+            randomIndex = 0;
+        } else {
+            do {
+                randomIndex = Math.floor(Math.random() * list.length);
+            } while (cur && list[randomIndex].fullPath === cur.fullPath);
+        }
+        const song = list[randomIndex];
+        await loadAndPlay(song, () => playRandomSong());
+    }, [songs, currentSong, loadAndPlay]);
+
+    const playSong = useCallback(async (song) => {
+        setShowSearch(false);
+        setSearchQuery('');
+        await loadAndPlay(song, () => playRandomSong());
+    }, [loadAndPlay, playRandomSong]);
 
     const togglePlayPause = () => {
         if (!howlRef.current) return;
@@ -248,6 +271,22 @@ export default function MusicPlayer() {
     const VolumeIcon = isMuted ? VolumeMuteIcon : volume < 0.4 ? VolumeLowIcon : VolumeHighIcon;
 
     const vinylClass = isPlaying ? 'spinning' : currentSong ? 'paused' : '';
+
+    const filteredSongs = searchQuery.trim()
+        ? songs.filter(s =>
+            cleanSongName(s.name).toLowerCase().includes(searchQuery.toLowerCase().trim())
+          )
+        : songs;
+
+    const handleSearchToggle = () => {
+        if (!showSearch) {
+            setShowSearch(true);
+            setTimeout(() => searchInputRef.current?.focus(), 50);
+        } else {
+            setShowSearch(false);
+            setSearchQuery('');
+        }
+    };
 
     return (
         <div className="app-container">
@@ -388,12 +427,80 @@ export default function MusicPlayer() {
                     >
                         <SkipForwardIcon />
                     </button>
+
+                    <button
+                        className={`control-btn search-toggle-btn${showSearch ? ' active' : ''}`}
+                        onClick={handleSearchToggle}
+                        id="search-toggle-btn"
+                        aria-label={showSearch ? 'Close search' : 'Search songs'}
+                        title={showSearch ? 'Close search' : 'Search songs'}
+                        disabled={songs.length === 0}
+                    >
+                        {showSearch ? <CloseIcon /> : <SearchIcon />}
+                    </button>
                 </div>
+
+                {/* Search Panel */}
+                <AnimatePresence>
+                    {showSearch && (
+                        <motion.div
+                            className="search-panel"
+                            key="search-panel"
+                            initial={{ opacity: 0, height: 0 }}
+                            animate={{ opacity: 1, height: 'auto' }}
+                            exit={{ opacity: 0, height: 0 }}
+                            transition={{ duration: 0.25, ease: 'easeInOut' }}
+                        >
+                            <div className="search-input-wrapper">
+                                <span className="search-icon-inner"><SearchIcon /></span>
+                                <input
+                                    ref={searchInputRef}
+                                    type="text"
+                                    className="search-input"
+                                    placeholder="Search by song name…"
+                                    value={searchQuery}
+                                    onChange={e => setSearchQuery(e.target.value)}
+                                    id="search-input"
+                                    aria-label="Search songs"
+                                />
+                                {searchQuery && (
+                                    <button
+                                        className="search-clear-btn"
+                                        onClick={() => setSearchQuery('')}
+                                        aria-label="Clear search"
+                                    >
+                                        <CloseIcon />
+                                    </button>
+                                )}
+                            </div>
+                            <ul className="search-results" role="listbox">
+                                {filteredSongs.length > 0 ? (
+                                    filteredSongs.map(song => (
+                                        <li
+                                            key={song.fullPath}
+                                            className={`search-result-item${currentSong?.fullPath === song.fullPath ? ' active' : ''}`}
+                                            onClick={() => playSong(song)}
+                                            role="option"
+                                            aria-selected={currentSong?.fullPath === song.fullPath}
+                                        >
+                                            <span className="result-icon">
+                                                {currentSong?.fullPath === song.fullPath && isPlaying ? '▶' : '♪'}
+                                            </span>
+                                            <span className="result-name">{cleanSongName(song.name)}</span>
+                                        </li>
+                                    ))
+                                ) : (
+                                    <li className="search-no-results">No tracks match "{searchQuery}"</li>
+                                )}
+                            </ul>
+                        </motion.div>
+                    )}
+                </AnimatePresence>
 
                 {/* Shuffle Button */}
                 <motion.button
                     className="shuffle-btn"
-                    onClick={playRandomSong}
+                    onClick={() => playRandomSong()}
                     disabled={isLoading || songs.length === 0}
                     whileTap={{ scale: 0.97 }}
                     id="shuffle-btn"
