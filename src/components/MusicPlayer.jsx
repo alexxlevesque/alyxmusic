@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Howl } from 'howler';
-import { fetchMusicList, getMusicURL, fetchAllRatings, setRating, removeRating } from '../services/firebase';
+import { fetchMusicList, getMusicURL } from '../services/firebase';
 
 /* ——— Icon Components ——— */
 const PlayIcon = () => (
@@ -100,26 +100,18 @@ export default function MusicPlayer() {
     const [initialLoad, setInitialLoad] = useState(true);
     const [showSearch, setShowSearch] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
-    const [ratings, setRatings] = useState(new Map());
     const searchInputRef = useRef(null);
 
     const howlRef = useRef(null);
     const rafRef = useRef(null);
     const previousVolume = useRef(0.7);
 
-    // Load song list and ratings on mount
+    // Load song list on mount
     useEffect(() => {
-        async function loadData() {
+        async function loadSongs() {
             try {
-                const [list, ratingsMap] = await Promise.all([
-                    fetchMusicList(),
-                    fetchAllRatings().catch(err => {
-                        console.error('Failed to fetch ratings:', err);
-                        return new Map();
-                    }),
-                ]);
+                const list = await fetchMusicList();
                 setSongs(list);
-                setRatings(ratingsMap);
             } catch (err) {
                 console.error('Failed to fetch songs:', err);
                 setError('Could not connect to music library. Check your Firebase config.');
@@ -127,7 +119,7 @@ export default function MusicPlayer() {
                 setInitialLoad(false);
             }
         }
-        loadData();
+        loadSongs();
     }, []);
 
     // Progress updater
