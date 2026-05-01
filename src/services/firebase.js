@@ -1,5 +1,5 @@
 import { initializeApp } from 'firebase/app';
-import { getStorage, ref, listAll, getDownloadURL } from 'firebase/storage';
+import { getStorage, ref, listAll, getDownloadURL, deleteObject } from 'firebase/storage';
 import { getFirestore, collection, getDocs, doc, setDoc, deleteDoc } from 'firebase/firestore';
 
 const firebaseConfig = {
@@ -48,6 +48,11 @@ export async function setRating(fullPath, rating) {
 
 export async function removeRating(fullPath) {
     await deleteDoc(doc(db, 'ratings', pathToDocId(fullPath)));
+}
+
+export async function deleteSong(fullPath) {
+    const fileRef = ref(storage, fullPath);
+    await deleteObject(fileRef);
 }
 
 export { storage };
