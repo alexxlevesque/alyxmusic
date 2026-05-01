@@ -247,7 +247,8 @@ export default function MusicPlayer() {
     }, [currentSong, ratings]);
 
     const handleDeleteBad = useCallback(async () => {
-        const toDelete = songs.filter(s => ratings.get(s.fullPath) === 'bad');
+        const toDelete = songs.filter(s => s?.fullPath && ratings.get(s.fullPath) === 'bad');
+        if (toDelete.length === 0) { setIsConfirmingDelete(false); return; }
         const results = await Promise.allSettled(
             toDelete.map(song => Promise.all([
                 deleteSong(song.fullPath),
@@ -258,7 +259,7 @@ export default function MusicPlayer() {
             toDelete.filter((_, i) => results[i].status === 'fulfilled').map(s => s.fullPath)
         );
         const failCount = results.filter(r => r.status === 'rejected').length;
-        setSongs(prev => prev.filter(s => !succeededPaths.has(s.fullPath)));
+        setSongs(prev => prev.filter(s => s?.fullPath && !succeededPaths.has(s.fullPath)));
         setRatings(prev => {
             const next = new Map(prev);
             succeededPaths.forEach(p => next.delete(p));
