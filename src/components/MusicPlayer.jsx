@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Howl } from 'howler';
-import { fetchMusicList, getMusicURL, fetchAllRatings, setRating, removeRating } from '../services/firebase';
+import { fetchMusicList, getMusicURL, fetchAllRatings, setRating, removeRating, deleteSong } from '../services/firebase';
 
 /* ——— Icon Components ——— */
 const PlayIcon = () => (
@@ -102,6 +102,7 @@ export default function MusicPlayer() {
     const [searchQuery, setSearchQuery] = useState('');
     const [showBadOnly, setShowBadOnly] = useState(false);
     const [ratings, setRatings] = useState(new Map());
+    const [isConfirmingDelete, setIsConfirmingDelete] = useState(false);
     const searchInputRef = useRef(null);
 
     const howlRef = useRef(null);
@@ -245,6 +246,40 @@ export default function MusicPlayer() {
         }
     }, [currentSong, ratings]);
 
+    const handleDeleteBad = useCallback(async () => {
+        const toDelete = songs.filter(s => ratings.get(s.fullPath) === 'bad');
+        const results = await Promise.allSettled(
+            toDelete.map(song => Promise.all([
+                deleteSong(song.fullPath),
+                removeRating(song.fullPath),
+            ]))
+        );
+        const succeededPaths = new Set(
+            toDelete.filter((_, i) => results[i].status === 'fulfilled').map(s => s.fullPath)
+        );
+        const failCount = results.filter(r => r.status === 'rejected').length;
+        setSongs(prev => prev.filter(s => !succeededPaths.has(s.fullPath)));
+        setRatings(prev => {
+            const next = new Map(prev);
+            succeededPaths.forEach(p => next.delete(p));
+            return next;
+        });
+        if (currentSong && succeededPaths.has(currentSong.fullPath)) {
+            if (howlRef.current) howlRef.current.unload();
+            howlRef.current = null;
+            if (rafRef.current) cancelAnimationFrame(rafRef.current);
+            setCurrentSong(null);
+            setIsPlaying(false);
+            setProgress(0);
+            setCurrentTime(0);
+            setDuration(0);
+        }
+        setIsConfirmingDelete(false);
+        if (failCount > 0) {
+            setError(`${failCount} song${failCount !== 1 ? 's' : ''} couldn't be deleted — try again.`);
+        }
+    }, [songs, ratings, currentSong]);
+
     const togglePlayPause = () => {
         if (!howlRef.current) return;
         if (isPlaying) {
@@ -312,6 +347,8 @@ export default function MusicPlayer() {
                 cleanSongName(s.name).toLowerCase().includes(searchQuery.toLowerCase().trim())
               )
             : songs;
+
+    const badSongs = songs.filter(s => ratings.get(s.fullPath) === 'bad');
 
     const handleSearchToggle = () => {
         if (!showSearch) {
