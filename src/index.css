@@ -932,52 +932,6 @@ body {
 }
 
 /* ========================= */
-/* SEARCH BAD FILTER         */
-/* ========================= */
-.search-filter-row {
-    display: flex;
-    gap: 8px;
-}
-
-.filter-bad-btn {
-    padding: 4px 12px;
-    border-radius: var(--radius-full);
-    border: 1.5px solid var(--border-subtle);
-    background: transparent;
-    color: var(--text-tertiary);
-    font-family: var(--font-primary);
-    font-size: 0.7rem;
-    font-weight: 700;
-    letter-spacing: 0.06em;
-    cursor: pointer;
-    transition: all 0.2s ease;
-}
-
-.filter-bad-btn:hover {
-    border-color: rgba(239, 68, 68, 0.3);
-    color: #fca5a5;
-}
-
-.filter-bad-btn.active {
-    background: rgba(239, 68, 68, 0.12);
-    border-color: #ef4444;
-    color: #fca5a5;
-}
-
-.bad-badge {
-    margin-left: auto;
-    flex-shrink: 0;
-    font-size: 0.62rem;
-    font-weight: 700;
-    letter-spacing: 0.06em;
-    color: #fca5a5;
-    padding: 2px 6px;
-    border-radius: var(--radius-sm);
-    background: rgba(239, 68, 68, 0.12);
-    border: 1px solid rgba(239, 68, 68, 0.2);
-}
-
-/* ========================= */
 /* RESPONSIVE                */
 /* ========================= */
 @media (max-width: 520px) {

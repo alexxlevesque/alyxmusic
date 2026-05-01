@@ -100,7 +100,6 @@ export default function MusicPlayer() {
     const [initialLoad, setInitialLoad] = useState(true);
     const [showSearch, setShowSearch] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
-    const [showBadOnly, setShowBadOnly] = useState(false);
     const [ratings, setRatings] = useState(new Map());
     const searchInputRef = useRef(null);
 
@@ -305,13 +304,11 @@ export default function MusicPlayer() {
 
     const vinylClass = isPlaying ? 'spinning' : currentSong ? 'paused' : '';
 
-    const filteredSongs = showBadOnly
-        ? songs.filter(s => ratings.get(s.fullPath) === 'bad')
-        : searchQuery.trim()
-            ? songs.filter(s =>
-                cleanSongName(s.name).toLowerCase().includes(searchQuery.toLowerCase().trim())
-              )
-            : songs;
+    const filteredSongs = searchQuery.trim()
+        ? songs.filter(s =>
+            cleanSongName(s.name).toLowerCase().includes(searchQuery.toLowerCase().trim())
+          )
+        : songs;
 
     const handleSearchToggle = () => {
         if (!showSearch) {
@@ -320,7 +317,6 @@ export default function MusicPlayer() {
         } else {
             setShowSearch(false);
             setSearchQuery('');
-            setShowBadOnly(false);
         }
     };
 
@@ -531,14 +527,6 @@ export default function MusicPlayer() {
                                     </button>
                                 )}
                             </div>
-                            <div className="search-filter-row">
-                                <button
-                                    className={`filter-bad-btn${showBadOnly ? ' active' : ''}`}
-                                    onClick={() => setShowBadOnly(v => !v)}
-                                >
-                                    Show BAD
-                                </button>
-                            </div>
                             <ul className="search-results" role="listbox">
                                 {filteredSongs.length > 0 ? (
                                     filteredSongs.map(song => (
@@ -553,9 +541,6 @@ export default function MusicPlayer() {
                                                 {currentSong?.fullPath === song.fullPath && isPlaying ? '▶' : '♪'}
                                             </span>
                                             <span className="result-name">{cleanSongName(song.name)}</span>
-                                            {ratings.get(song.fullPath) === 'bad' && (
-                                                <span className="bad-badge">BAD</span>
-                                            )}
                                         </li>
                                     ))
                                 ) : (
