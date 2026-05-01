@@ -220,6 +220,30 @@ export default function MusicPlayer() {
         await loadAndPlay(song, () => playRandomSong());
     }, [loadAndPlay, playRandomSong]);
 
+    const handleRate = useCallback(async (rating) => {
+        if (!currentSong) return;
+        const { fullPath } = currentSong;
+        const existing = ratings.get(fullPath);
+        const newRatings = new Map(ratings);
+        if (existing === rating) {
+            newRatings.delete(fullPath);
+        } else {
+            newRatings.set(fullPath, rating);
+        }
+        setRatings(newRatings);
+        try {
+            if (existing === rating) {
+                await removeRating(fullPath);
+            } else {
+                await setRating(fullPath, rating);
+            }
+        } catch (err) {
+            setRatings(ratings);
+            setError('Failed to save rating. Try again.');
+            console.error(err);
+        }
+    }, [currentSong, ratings]);
+
     const togglePlayPause = () => {
         if (!howlRef.current) return;
         if (isPlaying) {
@@ -363,6 +387,28 @@ export default function MusicPlayer() {
                         )}
                     </motion.div>
                 </AnimatePresence>
+
+                {/* Rating Buttons */}
+                {currentSong && (
+                    <div className="rating-buttons">
+                        <button
+                            className={`rating-btn good${ratings.get(currentSong.fullPath) === 'good' ? ' active' : ''}`}
+                            onClick={() => handleRate('good')}
+                            disabled={isLoading}
+                            aria-label="Rate good"
+                        >
+                            GOOD
+                        </button>
+                        <button
+                            className={`rating-btn bad${ratings.get(currentSong.fullPath) === 'bad' ? ' active' : ''}`}
+                            onClick={() => handleRate('bad')}
+                            disabled={isLoading}
+                            aria-label="Rate bad"
+                        >
+                            BAD
+                        </button>
+                    </div>
+                )}
 
                 {/* Visualizer */}
                 <div className={`visualizer ${isPlaying ? 'active' : ''}`}>
