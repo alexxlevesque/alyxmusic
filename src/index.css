@@ -887,51 +887,6 @@ body {
 }
 
 /* ========================= */
-/* RATING BUTTONS            */
-/* ========================= */
-.rating-buttons {
-    display: flex;
-    gap: 10px;
-    justify-content: center;
-}
-
-.rating-btn {
-    padding: 6px 20px;
-    border-radius: var(--radius-full);
-    border: 1.5px solid var(--border-subtle);
-    background: transparent;
-    color: var(--text-tertiary);
-    font-family: var(--font-primary);
-    font-size: 0.72rem;
-    font-weight: 700;
-    letter-spacing: 0.08em;
-    cursor: pointer;
-    transition: all 0.2s ease;
-}
-
-.rating-btn:hover:not(:disabled) {
-    border-color: rgba(255, 255, 255, 0.15);
-    color: var(--text-secondary);
-}
-
-.rating-btn:disabled {
-    opacity: 0.35;
-    cursor: not-allowed;
-}
-
-.rating-btn.good.active {
-    background: rgba(16, 185, 129, 0.12);
-    border-color: var(--accent-emerald);
-    color: var(--accent-emerald);
-}
-
-.rating-btn.bad.active {
-    background: rgba(239, 68, 68, 0.12);
-    border-color: #ef4444;
-    color: #fca5a5;
-}
-
-/* ========================= */
 /* RESPONSIVE                */
 /* ========================= */
 @media (max-width: 520px) {
