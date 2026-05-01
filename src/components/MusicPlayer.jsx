@@ -663,9 +663,26 @@ export default function MusicPlayer() {
                     animate={{ opacity: 1 }}
                     transition={{ delay: 0.5 }}
                 >
-                    {songs.length > 0
-                        ? `${songs.length} track${songs.length !== 1 ? 's' : ''} in library`
-                        : 'No tracks found — upload to Firebase Storage /music'}
+                    {songs.length > 0 ? (
+                        isConfirmingDelete ? (
+                            <>
+                                {`Delete ${badSongs.length} BAD song${badSongs.length !== 1 ? 's' : ''} forever? `}
+                                <span className="counter-confirm-btn" onClick={handleDeleteBad}>Yes, delete</span>
+                                {' · '}
+                                <span className="counter-cancel-btn" onClick={() => setIsConfirmingDelete(false)}>Cancel</span>
+                            </>
+                        ) : (
+                            <>
+                                {`${songs.length} track${songs.length !== 1 ? 's' : ''} in library`}
+                                {badSongs.length > 0 && (
+                                    <>
+                                        {` · ${badSongs.length} BAD — `}
+                                        <span className="counter-cleanup-link" onClick={() => setIsConfirmingDelete(true)}>clean up?</span>
+                                    </>
+                                )}
+                            </>
+                        )
+                    ) : 'No tracks found — upload to Firebase Storage /music'}
                 </motion.div>
             )}
         </div>
