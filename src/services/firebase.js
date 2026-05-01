@@ -1,6 +1,5 @@
 import { initializeApp } from 'firebase/app';
 import { getStorage, ref, listAll, getDownloadURL } from 'firebase/storage';
-import { getFirestore, collection, getDocs, doc, setDoc, deleteDoc } from 'firebase/firestore';
 
 const firebaseConfig = {
     apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
@@ -13,41 +12,28 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const storage = getStorage(app);
-const db = getFirestore(app);
 
+/**
+ * Fetches all music files from Firebase Storage "music/" folder.
+ * Returns an array of { name, fullPath } objects.
+ */
 export async function fetchMusicList() {
     const musicRef = ref(storage, 'music');
     const result = await listAll(musicRef);
-    return result.items.map((item) => ({
+    const songs = result.items.map((item) => ({
         name: item.name,
         fullPath: item.fullPath,
     }));
+    return songs;
 }
 
+/**
+ * Gets the public download URL for a given file path in Firebase Storage.
+ */
 export async function getMusicURL(fullPath) {
     const fileRef = ref(storage, fullPath);
-    return getDownloadURL(fileRef);
-}
-
-function pathToDocId(fullPath) {
-    return encodeURIComponent(fullPath);
-}
-
-export async function fetchAllRatings() {
-    const snapshot = await getDocs(collection(db, 'ratings'));
-    const map = new Map();
-    snapshot.forEach(d => {
-        map.set(d.data().fullPath, d.data().rating);
-    });
-    return map;
-}
-
-export async function setRating(fullPath, rating) {
-    await setDoc(doc(db, 'ratings', pathToDocId(fullPath)), { fullPath, rating });
-}
-
-export async function removeRating(fullPath) {
-    await deleteDoc(doc(db, 'ratings', pathToDocId(fullPath)));
+    const url = await getDownloadURL(fileRef);
+    return url;
 }
 
 export { storage };
