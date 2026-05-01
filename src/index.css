@@ -978,6 +978,42 @@ body {
 }
 
 /* ========================= */
+/* COUNTER CLEANUP LINKS     */
+/* ========================= */
+.counter-cleanup-link {
+    color: #fca5a5;
+    cursor: pointer;
+    text-decoration: underline;
+    text-decoration-style: dotted;
+    transition: color 0.2s ease;
+}
+
+.counter-cleanup-link:hover {
+    color: #ef4444;
+}
+
+.counter-confirm-btn {
+    color: #fca5a5;
+    cursor: pointer;
+    font-weight: 600;
+    transition: color 0.2s ease;
+}
+
+.counter-confirm-btn:hover {
+    color: #ef4444;
+}
+
+.counter-cancel-btn {
+    color: var(--text-tertiary);
+    cursor: pointer;
+    transition: color 0.2s ease;
+}
+
+.counter-cancel-btn:hover {
+    color: var(--text-secondary);
+}
+
+/* ========================= */
 /* RESPONSIVE                */
 /* ========================= */
 @media (max-width: 520px) {
