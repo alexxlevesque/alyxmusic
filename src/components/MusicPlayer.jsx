@@ -201,20 +201,20 @@ export default function MusicPlayer() {
     }, [isMuted, volume, updateProgress]);
 
     const playRandomSong = useCallback(async (songsOverride, currentOverride) => {
-        const list = songsOverride ?? songs;
+        const pool = (songsOverride ?? songs).filter(s => !ratings.get(s.fullPath));
         const cur = currentOverride ?? currentSong;
-        if (list.length === 0) return;
+        if (pool.length === 0) return;
         let randomIndex;
-        if (list.length === 1) {
+        if (pool.length === 1) {
             randomIndex = 0;
         } else {
             do {
-                randomIndex = Math.floor(Math.random() * list.length);
-            } while (cur && list[randomIndex].fullPath === cur.fullPath);
+                randomIndex = Math.floor(Math.random() * pool.length);
+            } while (cur && pool[randomIndex].fullPath === cur.fullPath);
         }
-        const song = list[randomIndex];
+        const song = pool[randomIndex];
         await loadAndPlay(song, () => playRandomSong());
-    }, [songs, currentSong, loadAndPlay]);
+    }, [songs, currentSong, ratings, loadAndPlay]);
 
     const playSong = useCallback(async (song) => {
         setShowSearch(false);
